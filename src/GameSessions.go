@@ -14,6 +14,7 @@ type GameHub struct {
 	sessions         map[string]*Session
 	newConnection    chan *Client
 	closedConnection chan *Client
+	newSession       chan *Session
 }
 
 func NewGameHub() *GameHub {
@@ -22,11 +23,12 @@ func NewGameHub() *GameHub {
 		clients:          make(map[*Client]bool),
 		newConnection:    make(chan *Client),
 		closedConnection: make(chan *Client),
+		newSession:       make(chan *Session),
 	}
 }
 
 // TODO: Db connection
-// TODO: New session\end session handling
+// TODO: End session handling
 func (g *GameHub) Run() {
 	for {
 		select {
@@ -36,6 +38,9 @@ func (g *GameHub) Run() {
 		case client := <-g.closedConnection:
 			fmt.Println("Client disconnected")
 			delete(g.clients, client)
+		case session := <-g.newSession:
+			fmt.Println("New session, user login " + session.userData.Login)
+			g.sessions[session.authToken] = session
 		}
 	}
 }
@@ -59,4 +64,15 @@ func (g *GameHub) ServeWs(w http.ResponseWriter, r *http.Request) {
 type Session struct {
 	userData  *types.User
 	authToken string
+}
+
+// FindSessionByUser returns session pointer if session of user
+// with provided id exists
+func (g *GameHub) FindSessionByUser(userId int64) *Session {
+	for _, s := range g.sessions {
+		if s.userData.Id == userId {
+			return s
+		}
+	}
+	return nil
 }

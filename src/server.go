@@ -8,6 +8,9 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"math/rand"
+	"encoding/base64"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
@@ -81,6 +84,7 @@ func (s *Server) writeResponse(w http.ResponseWriter, responseBody interface{}, 
 
 func (s *Server) Run() {
 	defer s.databaseClient.Close()
+	rand.Seed(time.Now().UnixNano())
 	err := s.databaseClient.CreateSchema()
 	if err != nil {
 		s.logError("Failed to create database schema", err)
@@ -124,7 +128,23 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request, p httprout
 		s.writeResponse(w, &map[string]string{"err": "Failed to login"}, http.StatusUnauthorized)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	// Load user's session and return auth token
+	// Check if session already exists
+	session := s.hub.FindSessionByUser(user.Id)
+	if session != nil {
+		s.writeResponse(w, &map[string]string{"token": session.authToken}, http.StatusOK)
+		return
+	}
+	// Create new session
+	session = &Session{
+		userData: user,
+	}
+	tokenBytes := make([]byte, 8)
+	rand.Read(tokenBytes)
+	fmt.Println(tokenBytes)
+	session.authToken = base64.StdEncoding.EncodeToString(tokenBytes)
+	s.hub.newSession <- session
+	s.writeResponse(w, &map[string]string{"token": session.authToken}, http.StatusOK)
 }
 
 func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
