@@ -3,9 +3,9 @@ package types
 import "golang.org/x/crypto/bcrypt"
 
 type User struct {
-	Id       int64
-	Login    string `sql:",unique"`
-	Password string
+	Id       int64  `json:"-"`
+	Login    string `sql:",unique" json:"login"`
+	Password string `json:"-"`
 }
 
 func (u User) Authenticate(password string) bool {

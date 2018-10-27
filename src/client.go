@@ -1,6 +1,7 @@
 package src
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -42,6 +43,55 @@ type Client struct {
 	send    chan []byte
 }
 
+func (c *Client) Authorize(authToken string) {
+	// Get client's session from hub
+	session := c.hub.FindSessionByToken(authToken)
+	responseMap := map[string]interface{}{
+		"channel":  "auth",
+		"response": false,
+	}
+	if session == nil {
+		// Write message informing that authorization failed
+		c.sendJSON(responseMap)
+		return
+	}
+	// Inform user that authorization was successfull
+	// And send session data
+	c.session = session
+	c.SendSessionInfo()
+	// TODO: Send session data
+}
+
+func (c *Client) sendJSON(d interface{}) {
+	j, _ := json.Marshal(d)
+	c.send <- j
+}
+
+// TODO: Very likely to be changed
+func (c *Client) SendSessionInfo() {
+	c.sendJSON(c.session.userData)
+}
+
+func (c *Client) HandleClientMessage(jsonInt interface{}) {
+	jsonMap := jsonInt.(map[string]interface{})
+	switch jsonMap["channel"] {
+	case "auth":
+		responseMap := map[string]interface{}{
+			"channel":  "auth",
+			"response": false,
+		}
+		token, ok := jsonMap["authToken"].(string)
+		if ok != true {
+			c.sendJSON(responseMap)
+			return
+		}
+		c.Authorize(token)
+	default:
+		fmt.Println("fuck wat")
+		c.sendJSON(map[string]string{"err": "wtf"})
+	}
+}
+
 func (c *Client) Reader() {
 	defer func() {
 		c.hub.closedConnection <- c
@@ -63,6 +113,7 @@ func (c *Client) Reader() {
 		}
 		// TODO: Handle messages from client somewhere right here
 		fmt.Printf("Message: %s", msg)
+		c.HandleClientMessage(msg)
 	}
 }
 

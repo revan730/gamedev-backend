@@ -76,3 +76,14 @@ func (g *GameHub) FindSessionByUser(userId int64) *Session {
 	}
 	return nil
 }
+
+// FindSessionByToken returns session pointer if session of user
+// with provided authToken exists
+func (g *GameHub) FindSessionByToken(authToken string) *Session {
+	for _, s := range g.sessions {
+		if s.authToken == authToken {
+			return s
+		}
+	}
+	return nil
+}
