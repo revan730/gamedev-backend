@@ -59,6 +59,7 @@ func (c *Client) Authorize(authToken string) {
 	// And send session data
 	c.session = session
 	c.SendSessionInfo()
+	c.SendCurrentPage()
 	// TODO: Send session data
 }
 
@@ -70,6 +71,30 @@ func (c *Client) sendJSON(d interface{}) {
 // TODO: Very likely to be changed
 func (c *Client) SendSessionInfo() {
 	c.sendJSON(c.session.userData)
+}
+
+// TODO: And this one too
+func (c *Client) SendCurrentPage() {
+	page := c.hub.GetPage(c.session.userData.CurrentPage)
+	c.sendJSON(page)
+}
+
+func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
+	responseMap := map[string]interface{}{
+		"channel":  "story",
+		"response": false,
+	}
+	switch jsonMap["method"] {
+	case "save":
+		// Save user's progress
+		responseMap["response"] = c.hub.SaveUserSession(c.session)
+		c.sendJSON(responseMap)
+	case "forward":
+		// Go to next text page
+	default:
+		// Unknown method
+		c.sendJSON(responseMap)
+	}
 }
 
 func (c *Client) HandleClientMessage(jsonInt interface{}) {
@@ -86,8 +111,9 @@ func (c *Client) HandleClientMessage(jsonInt interface{}) {
 			return
 		}
 		c.Authorize(token)
+	case "story":
+		c.HandleStoryMessages(jsonMap)
 	default:
-		fmt.Println("fuck wat")
 		c.sendJSON(map[string]string{"err": "wtf"})
 	}
 }

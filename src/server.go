@@ -35,7 +35,7 @@ func NewServer(logger *zap.Logger, config *Config) *Server {
 		config: config,
 	}
 	dbClient := db.NewDBClient(config.DBAddr, config.DB, config.DBUser, config.DBPassword)
-	server.hub = NewGameHub()
+	server.hub = NewGameHub(dbClient, logger)
 	server.databaseClient = dbClient
 	return server
 }

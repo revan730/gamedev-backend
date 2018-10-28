@@ -30,7 +30,12 @@ func (d *DatabaseClient) Close() {
 
 // CreateSchema creates database tables if they not exist
 func (d *DatabaseClient) CreateSchema() error {
-	for _, model := range []interface{}{(*types.User)(nil)} {
+	for _, model := range []interface{}{(*types.User)(nil),
+		(*types.Page)(nil),
+		(*types.Question)(nil),
+		(*types.Jumper)(nil),
+		(*types.Department)(nil),
+		(*types.Speciality)(nil)} {
 		err := d.pg.CreateTable(model, &orm.CreateTableOptions{
 			IfNotExists: true,
 		})
@@ -47,7 +52,6 @@ func HashPassword(password string) (string, error) {
 }
 
 func (d *DatabaseClient) CreateUser(login, pass string) error {
-	// TODO: password hashing
 	hash, err := HashPassword(pass)
 	if err != nil {
 		return err
@@ -58,6 +62,10 @@ func (d *DatabaseClient) CreateUser(login, pass string) error {
 	}
 
 	return d.pg.Insert(user)
+}
+
+func (d *DatabaseClient) SaveUser(user *types.User) error {
+	return d.pg.Update(user)
 }
 
 func (d *DatabaseClient) FindUser(login string) (*types.User, error) {
@@ -72,5 +80,17 @@ func (d *DatabaseClient) FindUser(login string) (*types.User, error) {
 		return nil, err
 	} else {
 		return user, nil
+	}
+}
+
+func (d *DatabaseClient) FindPageById(pageId int64) (*types.Page, error) {
+	page := &types.Page{
+		Id: pageId,
+	}
+	err := d.pg.Select(page)
+	if err != nil {
+		return nil, err
+	} else {
+		return page, nil
 	}
 }
