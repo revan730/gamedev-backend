@@ -106,3 +106,9 @@ func (d *DatabaseClient) FindAnswerById(answerId int64) (*types.Answer, error) {
 		return answer, nil
 	}
 }
+
+func (d *DatabaseClient) FindPageAnswers(pageId int64) ([]types.Answer, error) {
+	var answers []types.Answer
+	_, err := d.pg.Query(&answers, "SELECT * FROM answers WHERE page_id = ?", pageId)
+	return answers, err
+}

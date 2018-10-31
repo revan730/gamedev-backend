@@ -33,7 +33,6 @@ func NewGameHub(dbCl *db.DatabaseClient, logger *zap.Logger) *GameHub {
 	}
 }
 
-// TODO: End session handling
 func (g *GameHub) Run() {
 	for {
 		select {
@@ -41,9 +40,11 @@ func (g *GameHub) Run() {
 			g.clients[client] = false
 			fmt.Println("Client connected")
 		case client := <-g.closedConnection:
+			// TODO: Save session to db and remove here
 			fmt.Println("Client disconnected")
 			delete(g.clients, client)
 		case session := <-g.newSession:
+			// TODO: Load session on ws auth from redis
 			fmt.Println("New session, user login " + session.userData.Login)
 			g.sessions[session.authToken] = session
 		}
@@ -129,4 +130,13 @@ func (g *GameHub) GetAnswer(answerId int64) *types.Answer {
 		return nil
 	}
 	return answer
+}
+
+func (g *GameHub) GetPageAnswers(pageId int64) []types.Answer {
+	answers, err := g.databaseClient.FindPageAnswers(pageId)
+	if err != nil {
+		g.logError("Unable to get answers", err)
+		return nil
+	}
+	return answers
 }

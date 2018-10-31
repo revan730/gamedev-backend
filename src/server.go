@@ -53,6 +53,7 @@ func (s *Server) logInfo(msg string) {
 func (s *Server) Routes() *Server {
 	s.router.POST("/api/v1/login", s.LoginHandler)
 	s.router.POST("/api/v1/register", s.RegisterHandler)
+	s.router.GET("/api/v1/debug/users", s.DebugUsersHandler)
 	return s
 }
 
@@ -128,6 +129,12 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request, p httprout
 		s.writeResponse(w, &map[string]string{"err": "Failed to login"}, http.StatusUnauthorized)
 		return
 	}
+	// TODO: Don't load user's session here but only
+	// generate auth token and save it to redis instead.
+	// It is better to load session after ws auth
+	// and remove it from memory once client disconnects
+	// (less troubles with db sync and load balancing)
+
 	// Load user's session and return auth token
 	// Check if session already exists
 	session := s.hub.FindSessionByUser(user.Id)
@@ -173,4 +180,8 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request, p httpr
 		return
 	}
 	w.WriteHeader(http.StatusOK)
+}
+
+func (s *Server) DebugUsersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	s.writeResponse(w, &map[string]int{"count": len(s.hub.clients)}, http.StatusOK)
 }

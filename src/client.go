@@ -75,14 +75,21 @@ func (c *Client) SendSessionInfo() {
 	c.sendJSON(c.session.userData)
 }
 
-// TODO: And this one too
 func (c *Client) SendCurrentPage() {
+	jsonMap := map[string]interface{}{
+		"channel": "story",
+	}
 	page := c.hub.GetPage(c.session.userData.CurrentPage)
-	c.sendJSON(page)
+	jsonMap["text"] = page.Text
+	if page.IsQuestion == true {
+		answers := c.hub.GetPageAnswers(page.Id)
+		jsonMap["answers"] = answers
+	}
+	c.sendJSON(jsonMap)
 }
 
 // TODO: Using reflect?
-func (c *Client) RecalculateStats(answer *types.Answer) {
+func (c *Client) recalculateStats(answer *types.Answer) {
 	c.session.userData.Knowledge += answer.Knowledge
 	c.session.userData.Performance += answer.Performance
 	c.session.userData.Sober += answer.Sober
@@ -92,25 +99,26 @@ func (c *Client) RecalculateStats(answer *types.Answer) {
 
 // NextPage proceeds game session to next page
 // handles questions and jump logic
-// TODO: Page struct should contain array of answers for quick access
 func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 	currentPage := c.hub.GetPage(c.session.userData.CurrentPage)
 	// Check if current page has questions
 	// and handle them
 	if currentPage.IsQuestion == true {
 		// Load answer
-		answerId, ok := jsonMap["answerId"].(int64)
+		answerId, ok := jsonMap["answerId"].(float64)
 		if ok == false {
 			return errors.New("NextPage: bad or missing answerId")
 		}
-		answer := c.hub.GetAnswer(answerId)
+		answer := c.hub.GetAnswer(int64(answerId))
 		if answer == nil {
 			return errors.New("NextPage: answer not found")
 		}
 		// Recalculate user stats and set flags according to
 		// answer values
-		// TODO: Flags
-		c.RecalculateStats(answer)
+		c.recalculateStats(answer)
+		c.session.userData.MergeFlags(answer.Flags)
+		// Send updated stats
+		c.SendSessionInfo()
 	}
 	if currentPage.IsJumper == true {
 		// TODO: Jumper logic handle
@@ -186,7 +194,6 @@ func (c *Client) Reader() {
 			}
 			break
 		}
-		// TODO: Handle messages from client somewhere right here
 		fmt.Printf("Message: %s", msg)
 		c.HandleClientMessage(msg)
 	}
