@@ -32,7 +32,7 @@ func (d *DatabaseClient) Close() {
 func (d *DatabaseClient) CreateSchema() error {
 	for _, model := range []interface{}{(*types.User)(nil),
 		(*types.Page)(nil),
-		(*types.Question)(nil),
+		(*types.Answer)(nil),
 		(*types.Jumper)(nil),
 		(*types.Department)(nil),
 		(*types.Speciality)(nil)} {
@@ -92,5 +92,17 @@ func (d *DatabaseClient) FindPageById(pageId int64) (*types.Page, error) {
 		return nil, err
 	} else {
 		return page, nil
+	}
+}
+
+func (d *DatabaseClient) FindAnswerById(answerId int64) (*types.Answer, error) {
+	answer := &types.Answer{
+		Id: answerId,
+	}
+	err := d.pg.Select(answer)
+	if err != nil {
+		return nil, err
+	} else {
+		return answer, nil
 	}
 }

@@ -33,7 +33,6 @@ func NewGameHub(dbCl *db.DatabaseClient, logger *zap.Logger) *GameHub {
 	}
 }
 
-// TODO: Db connection
 // TODO: End session handling
 func (g *GameHub) Run() {
 	for {
@@ -121,4 +120,13 @@ func (g *GameHub) GetPage(pageId int64) *types.Page {
 		return nil
 	}
 	return page
+}
+
+func (g *GameHub) GetAnswer(answerId int64) *types.Answer {
+	answer, err := g.databaseClient.FindAnswerById(answerId)
+	if err != nil {
+		g.logError("Unable to get answer", err)
+		return nil
+	}
+	return answer
 }

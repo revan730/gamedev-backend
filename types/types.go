@@ -2,18 +2,20 @@ package types
 
 import "golang.org/x/crypto/bcrypt"
 
+// TODO: Default values
 type Speciality struct {
 	Id    int64  `json:"id"`
-	Title string `json:"title"`
+	Title string `sql:",unique" json:"title"`
 }
 
 type Department struct {
 	Id    int64  `json:"id"`
-	Title string `json:"title"`
+	Title string `sql:",unique" json:"title"`
 }
 
-type Question struct {
+type Answer struct {
 	Id          int64  `json:"answerId"`
+	PageId      int64  `json:"-"`
 	Text        string `json:"text"`
 	Knowledge   int    `json:"knowledge"`
 	Performance int    `json:"performance"`
@@ -29,17 +31,17 @@ type Jumper struct {
 }
 
 // TODO: Flags as jsonb type (if possible)
-// TODO: Fix those pointer types
+// TODO: Array of answers for question pages
 
 type Page struct {
-	Id         int64       `json:"-"`
-	NextPage   *Page       `json:"-"`
-	IsQuestion bool        `json:"-"`
-	IsJumper   bool        `json:"-"`
-	Year       int         `json:"year"`
-	Dep        *Department `json:"-"`
-	Spec       *Speciality `json:"-"`
-	Text       string      `json:"text"`
+	Id         int64  `json:"-"`
+	NextPage   int64  `json:"-"`
+	IsQuestion bool   `json:"-"`
+	IsJumper   bool   `json:"-"`
+	Year       int    `json:"year"`
+	Dep        int64  `json:"-"`
+	Spec       int64  `json:"-"`
+	Text       string `json:"text"`
 }
 
 type User struct {

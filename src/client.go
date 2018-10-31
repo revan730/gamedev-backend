@@ -2,11 +2,13 @@ package src
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/revan730/gamedev-backend/types"
 )
 
 const (
@@ -79,6 +81,47 @@ func (c *Client) SendCurrentPage() {
 	c.sendJSON(page)
 }
 
+// TODO: Using reflect?
+func (c *Client) RecalculateStats(answer *types.Answer) {
+	c.session.userData.Knowledge += answer.Knowledge
+	c.session.userData.Performance += answer.Performance
+	c.session.userData.Sober += answer.Sober
+	c.session.userData.Prestige += answer.Prestige
+	c.session.userData.Connections += answer.Connections
+}
+
+// NextPage proceeds game session to next page
+// handles questions and jump logic
+// TODO: Page struct should contain array of answers for quick access
+func (c *Client) NextPage(jsonMap map[string]interface{}) error {
+	currentPage := c.hub.GetPage(c.session.userData.CurrentPage)
+	// Check if current page has questions
+	// and handle them
+	if currentPage.IsQuestion == true {
+		// Load answer
+		answerId, ok := jsonMap["answerId"].(int64)
+		if ok == false {
+			return errors.New("NextPage: bad or missing answerId")
+		}
+		answer := c.hub.GetAnswer(answerId)
+		if answer == nil {
+			return errors.New("NextPage: answer not found")
+		}
+		// Recalculate user stats and set flags according to
+		// answer values
+		// TODO: Flags
+		c.RecalculateStats(answer)
+	}
+	if currentPage.IsJumper == true {
+		// TODO: Jumper logic handle
+		return nil
+	} else {
+		// Linear transition
+		c.session.userData.CurrentPage = currentPage.NextPage
+		return nil
+	}
+}
+
 func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
 	responseMap := map[string]interface{}{
 		"channel":  "story",
@@ -90,7 +133,13 @@ func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
 		responseMap["response"] = c.hub.SaveUserSession(c.session)
 		c.sendJSON(responseMap)
 	case "forward":
-		// Go to next text page
+		err := c.NextPage(jsonMap)
+		if err != nil {
+			fmt.Println("Failed to go to next page: ", err)
+			c.sendJSON(responseMap)
+			return
+		}
+		c.SendCurrentPage()
 	default:
 		// Unknown method
 		c.sendJSON(responseMap)
