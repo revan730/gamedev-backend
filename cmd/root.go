@@ -15,6 +15,8 @@ var (
 	db         string
 	dbUser     string
 	dbPass     string
+	redisAddr  string
+	redisPass  string
 )
 
 var RootCmd = &cobra.Command{
@@ -27,11 +29,13 @@ var serveCmd = &cobra.Command{
 	Short: "Start server",
 	Run: func(cmd *cobra.Command, args []string) {
 		config := &src.Config{
-			Port:       serverPort,
-			DBAddr:     dbAddr,
-			DB:         db,
-			DBUser:     dbUser,
-			DBPassword: dbPass,
+			Port:          serverPort,
+			DBAddr:        dbAddr,
+			DB:            db,
+			DBUser:        dbUser,
+			DBPassword:    dbPass,
+			RedisAddr:     redisAddr,
+			RedisPassword: redisPass,
 		}
 		logger := src.NewLogger(logVerbose)
 		server := src.NewServer(logger, config).Routes()
@@ -58,4 +62,8 @@ func init() {
 		"fict", "Set PostgreSQL user to use")
 	serveCmd.Flags().StringVarP(&dbPass, "pass", "c",
 		"fict", "Set PostgreSQL password to use")
+	serveCmd.Flags().StringVarP(&redisAddr, "redis", "r",
+		"redis:6379", "Set redis address")
+	serveCmd.Flags().StringVarP(&redisPass, "redispass", "b",
+		"", "Set redis address")
 }

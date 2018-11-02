@@ -39,15 +39,15 @@ var (
 )
 
 type Client struct {
-	conn    *websocket.Conn
-	hub     *GameHub
-	session *Session
-	send    chan []byte
+	conn     *websocket.Conn
+	hub      *GameHub
+	userData *types.User
+	send     chan []byte
 }
 
 func (c *Client) Authorize(authToken string) {
-	// Get client's session from hub
-	session := c.hub.FindSessionByToken(authToken)
+	// Get client's session from db via hub
+	session := c.hub.GetSessionByToken(authToken)
 	responseMap := map[string]interface{}{
 		"channel":  "auth",
 		"response": false,
@@ -59,10 +59,9 @@ func (c *Client) Authorize(authToken string) {
 	}
 	// Inform user that authorization was successfull
 	// And send session data
-	c.session = session
+	c.userData = session
 	c.SendSessionInfo()
 	c.SendCurrentPage()
-	// TODO: Send session data
 }
 
 func (c *Client) sendJSON(d interface{}) {
@@ -72,14 +71,18 @@ func (c *Client) sendJSON(d interface{}) {
 
 // TODO: Very likely to be changed
 func (c *Client) SendSessionInfo() {
-	c.sendJSON(c.session.userData)
+	jsonMap := map[string]interface{}{
+		"channel": "story",
+	}
+	jsonMap["stats"] = c.userData
+	c.sendJSON(jsonMap)
 }
 
 func (c *Client) SendCurrentPage() {
 	jsonMap := map[string]interface{}{
 		"channel": "story",
 	}
-	page := c.hub.GetPage(c.session.userData.CurrentPage)
+	page := c.hub.GetPage(c.userData.CurrentPage)
 	jsonMap["text"] = page.Text
 	if page.IsQuestion == true {
 		answers := c.hub.GetPageAnswers(page.Id)
@@ -90,17 +93,17 @@ func (c *Client) SendCurrentPage() {
 
 // TODO: Using reflect?
 func (c *Client) recalculateStats(answer *types.Answer) {
-	c.session.userData.Knowledge += answer.Knowledge
-	c.session.userData.Performance += answer.Performance
-	c.session.userData.Sober += answer.Sober
-	c.session.userData.Prestige += answer.Prestige
-	c.session.userData.Connections += answer.Connections
+	c.userData.Knowledge += answer.Knowledge
+	c.userData.Performance += answer.Performance
+	c.userData.Sober += answer.Sober
+	c.userData.Prestige += answer.Prestige
+	c.userData.Connections += answer.Connections
 }
 
 // NextPage proceeds game session to next page
 // handles questions and jump logic
 func (c *Client) NextPage(jsonMap map[string]interface{}) error {
-	currentPage := c.hub.GetPage(c.session.userData.CurrentPage)
+	currentPage := c.hub.GetPage(c.userData.CurrentPage)
 	// Check if current page has questions
 	// and handle them
 	if currentPage.IsQuestion == true {
@@ -116,7 +119,7 @@ func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 		// Recalculate user stats and set flags according to
 		// answer values
 		c.recalculateStats(answer)
-		c.session.userData.MergeFlags(answer.Flags)
+		c.userData.MergeFlags(answer.Flags)
 		// Send updated stats
 		c.SendSessionInfo()
 	}
@@ -125,7 +128,7 @@ func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 		return nil
 	} else {
 		// Linear transition
-		c.session.userData.CurrentPage = currentPage.NextPage
+		c.userData.CurrentPage = currentPage.NextPage
 		return nil
 	}
 }
@@ -138,7 +141,7 @@ func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
 	switch jsonMap["method"] {
 	case "save":
 		// Save user's progress
-		responseMap["response"] = c.hub.SaveUserSession(c.session)
+		responseMap["response"] = c.hub.SaveUserSession(c.userData)
 		c.sendJSON(responseMap)
 	case "forward":
 		err := c.NextPage(jsonMap)

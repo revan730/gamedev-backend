@@ -16,6 +16,7 @@ import (
 	"go.uber.org/zap"
 	"github.com/go-pg/pg"
 
+	"github.com/go-redis/redis"
 	"github.com/revan730/gamedev-backend/db"
 	"github.com/revan730/gamedev-backend/types"
 )
@@ -24,6 +25,7 @@ type Server struct {
 	logger         *zap.Logger
 	config         *Config
 	hub *GameHub
+	redisClient *redis.Client
 	databaseClient *db.DatabaseClient
 	router         *httprouter.Router
 }
@@ -34,8 +36,18 @@ func NewServer(logger *zap.Logger, config *Config) *Server {
 		router: httprouter.New(),
 		config: config,
 	}
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     config.RedisAddr,
+		Password: config.RedisPassword,
+		DB:       0,
+	})
+	_, err := redisClient.Ping().Result()
+	if err != nil {
+		panic(err)
+	}
 	dbClient := db.NewDBClient(config.DBAddr, config.DB, config.DBUser, config.DBPassword)
-	server.hub = NewGameHub(dbClient, logger)
+	server.hub = NewGameHub(dbClient, redisClient, logger)
+	server.redisClient = redisClient
 	server.databaseClient = dbClient
 	return server
 }
@@ -102,7 +114,6 @@ func (s *Server) Run() {
 }
 
 func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	// TODO: Implement
 	// Check if login and password are provided
 	var loginMsg types.CredentialsMessage
 	err := readJSON(r.Body, &loginMsg)
@@ -129,29 +140,14 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request, p httprout
 		s.writeResponse(w, &map[string]string{"err": "Failed to login"}, http.StatusUnauthorized)
 		return
 	}
-	// TODO: Don't load user's session here but only
-	// generate auth token and save it to redis instead.
-	// It is better to load session after ws auth
-	// and remove it from memory once client disconnects
-	// (less troubles with db sync and load balancing)
-
-	// Load user's session and return auth token
-	// Check if session already exists
-	session := s.hub.FindSessionByUser(user.Id)
-	if session != nil {
-		s.writeResponse(w, &map[string]string{"token": session.authToken}, http.StatusOK)
-		return
-	}
-	// Create new session
-	session = &Session{
-		userData: user,
-	}
+	
+	// Generate user token and save to redis
 	tokenBytes := make([]byte, 8)
 	rand.Read(tokenBytes)
-	fmt.Println(tokenBytes)
-	session.authToken = base64.StdEncoding.EncodeToString(tokenBytes)
-	s.hub.newSession <- session
-	s.writeResponse(w, &map[string]string{"token": session.authToken}, http.StatusOK)
+	authToken := base64.StdEncoding.EncodeToString(tokenBytes)
+	s.redisClient.Set(authToken, user.Id, 6 * time.Hour).Result()
+
+	s.writeResponse(w, &map[string]string{"token": authToken}, http.StatusOK)
 }
 
 func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

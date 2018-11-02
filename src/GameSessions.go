@@ -3,7 +3,9 @@ package src
 import (
 	"fmt"
 	"net/http"
+	"strconv"
 
+	"github.com/go-redis/redis"
 	"github.com/revan730/gamedev-backend/db"
 	"github.com/revan730/gamedev-backend/types"
 	"go.uber.org/zap"
@@ -13,23 +15,21 @@ import (
 // and handles client interaction
 type GameHub struct {
 	clients          map[*Client]bool
-	sessions         map[string]*Session
 	newConnection    chan *Client
 	closedConnection chan *Client
-	newSession       chan *Session
 	databaseClient   *db.DatabaseClient
+	redisClient      *redis.Client
 	logger           *zap.Logger
 }
 
-func NewGameHub(dbCl *db.DatabaseClient, logger *zap.Logger) *GameHub {
+func NewGameHub(dbCl *db.DatabaseClient, rCl *redis.Client, logger *zap.Logger) *GameHub {
 	return &GameHub{
-		sessions:         make(map[string]*Session),
 		clients:          make(map[*Client]bool),
 		newConnection:    make(chan *Client),
 		closedConnection: make(chan *Client),
-		newSession:       make(chan *Session),
 		databaseClient:   dbCl,
 		logger:           logger,
+		redisClient:      rCl,
 	}
 }
 
@@ -40,13 +40,9 @@ func (g *GameHub) Run() {
 			g.clients[client] = false
 			fmt.Println("Client connected")
 		case client := <-g.closedConnection:
-			// TODO: Save session to db and remove here
 			fmt.Println("Client disconnected")
+			g.SaveUserSession(client.userData)
 			delete(g.clients, client)
-		case session := <-g.newSession:
-			// TODO: Load session on ws auth from redis
-			fmt.Println("New session, user login " + session.userData.Login)
-			g.sessions[session.authToken] = session
 		}
 	}
 }
@@ -82,31 +78,29 @@ func (g *GameHub) logInfo(msg string) {
 	g.logger.Info("INFO", zap.String("msg", msg), zap.String("packageLevel", "hub"))
 }
 
-// FindSessionByUser returns session pointer if session of user
-// with provided id exists
-func (g *GameHub) FindSessionByUser(userId int64) *Session {
-	for _, s := range g.sessions {
-		if s.userData.Id == userId {
-			return s
-		}
+// GetSessionByToken returns session pointer if user's token is valid
+// by loading it from database
+func (g *GameHub) GetSessionByToken(authToken string) *types.User {
+	// Ask redis for user's id by token (if authorized)
+	// Load session by users id
+	userIdStr, err := g.redisClient.Get(authToken).Result()
+	if err != nil {
+		return nil
 	}
-	return nil
+	userId, err := strconv.Atoi(userIdStr)
+	if err != nil {
+		return nil
+	}
+	user, err := g.databaseClient.FindUserById(int64(userId))
+	if err != nil {
+		return nil
+	}
+	return user
 }
 
-// FindSessionByToken returns session pointer if session of user
-// with provided authToken exists
-func (g *GameHub) FindSessionByToken(authToken string) *Session {
-	for _, s := range g.sessions {
-		if s.authToken == authToken {
-			return s
-		}
-	}
-	return nil
-}
-
-func (g *GameHub) SaveUserSession(session *Session) bool {
+func (g *GameHub) SaveUserSession(session *types.User) bool {
 	// Save user's session to DB
-	err := g.databaseClient.SaveUser(session.userData)
+	err := g.databaseClient.SaveUser(session)
 	if err != nil {
 		g.logError("Unable to save user's session", err)
 		return false

@@ -47,7 +47,7 @@ func (d *DatabaseClient) CreateSchema() error {
 }
 
 func HashPassword(password string) (string, error) {
-	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	return string(bytes), err
 }
 
@@ -76,6 +76,19 @@ func (d *DatabaseClient) FindUser(login string) (*types.User, error) {
 	err := d.pg.Model(user).
 		Where("login = ?", login).
 		Select()
+	if err != nil {
+		return nil, err
+	} else {
+		return user, nil
+	}
+}
+
+func (d *DatabaseClient) FindUserById(userId int64) (*types.User, error) {
+	user := &types.User{
+		Id: userId,
+	}
+
+	err := d.pg.Select(user)
 	if err != nil {
 		return nil, err
 	} else {
