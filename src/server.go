@@ -168,7 +168,7 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request, p httpr
 		// TODO: Maybe move this error handling to CreateUser func?
 		pgErr, ok := err.(pg.Error)
 		if ok && pgErr.IntegrityViolation() {
-			s.writeResponse(w, &map[string]string{"err": "User already exists"}, http.StatusBadRequest)
+			s.writeResponse(w, &map[string]string{"err": "User already exists"}, http.StatusForbidden)
 			return
 		}
 		s.logError("Create user error", err)

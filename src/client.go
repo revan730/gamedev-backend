@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
-	"github.com/revan730/gamedev-backend/types"
 	"github.com/revan730/gamedev-backend/lua"
+	"github.com/revan730/gamedev-backend/types"
 )
 
 const (
@@ -73,7 +73,7 @@ func (c *Client) sendJSON(d interface{}) {
 // TODO: Very likely to be changed
 func (c *Client) SendSessionInfo() {
 	jsonMap := map[string]interface{}{
-		"channel": "story",
+		"channel": "stats",
 	}
 	jsonMap["stats"] = c.userData
 	c.sendJSON(jsonMap)

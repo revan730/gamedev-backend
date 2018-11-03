@@ -65,5 +65,5 @@ func init() {
 	serveCmd.Flags().StringVarP(&redisAddr, "redis", "r",
 		"redis:6379", "Set redis address")
 	serveCmd.Flags().StringVarP(&redisPass, "redispass", "b",
-		"", "Set redis address")
+		"", "Set redis password")
 }
