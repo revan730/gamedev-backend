@@ -33,7 +33,6 @@ func (d *DatabaseClient) CreateSchema() error {
 	for _, model := range []interface{}{(*types.User)(nil),
 		(*types.Page)(nil),
 		(*types.Answer)(nil),
-		(*types.Jumper)(nil),
 		(*types.Department)(nil),
 		(*types.Speciality)(nil)} {
 		err := d.pg.CreateTable(model, &orm.CreateTableOptions{

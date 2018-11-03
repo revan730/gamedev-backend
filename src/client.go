@@ -9,6 +9,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/revan730/gamedev-backend/types"
+	"github.com/revan730/gamedev-backend/lua"
 )
 
 const (
@@ -124,7 +125,8 @@ func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 		c.SendSessionInfo()
 	}
 	if currentPage.IsJumper == true {
-		// TODO: Jumper logic handle
+		interpreter := lua.NewInterpreter(c.userData)
+		interpreter.DoString(currentPage.JumperLogic)
 		return nil
 	} else {
 		// Linear transition

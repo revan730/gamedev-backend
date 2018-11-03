@@ -13,6 +13,7 @@ require (
 	github.com/spf13/cobra v0.0.3
 	github.com/spf13/pflag v1.0.3 // indirect
 	github.com/vmihailenco/sasl v0.0.0-20180925064641-2f13c189728a // indirect
+	github.com/yuin/gopher-lua v0.0.0-20181031023651-12c4817b42c5
 	go.uber.org/atomic v1.3.2 // indirect
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.9.1

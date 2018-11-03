@@ -7,6 +7,9 @@ import (
 )
 
 // TODO: Default values
+// TODO: deny nulls
+// TODO: Page string tags to simplify search and
+// identification
 type Speciality struct {
 	Id    int64  `json:"id"`
 	Title string `sql:",unique" json:"title"`
@@ -29,20 +32,16 @@ type Answer struct {
 	Flags       string `json:"-"`
 }
 
-type Jumper struct {
-	Id    int64  `json:'"jumpId"`
-	Logic string `json:"-"`
-}
-
 type Page struct {
-	Id         int64  `json:"-"`
-	NextPage   int64  `json:"-"`
-	IsQuestion bool   `json:"-"`
-	IsJumper   bool   `json:"-"`
-	Year       int    `json:"year"`
-	Dep        int64  `json:"-"`
-	Spec       int64  `json:"-"`
-	Text       string `json:"text"`
+	Id          int64  `json:"-"`
+	NextPage    int64  `json:"-"`
+	IsQuestion  bool   `json:"-"`
+	IsJumper    bool   `json:"-"`
+	Year        int    `json:"year"`
+	Dep         int64  `json:"-"`
+	Spec        int64  `json:"-"`
+	Text        string `json:"text"`
+	JumperLogic string `json:"-"`
 }
 
 type User struct {
