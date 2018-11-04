@@ -177,7 +177,7 @@ func (s *Server) RegisterHandler(w http.ResponseWriter, r *http.Request, p httpr
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	w.WriteHeader(http.StatusOK)
+	s.writeResponse(w, &map[string]interface{}{"err": nil}, http.StatusOK)
 }
 
 func (s *Server) DebugUsersHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) {

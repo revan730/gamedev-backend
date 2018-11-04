@@ -50,7 +50,7 @@ type User struct {
 	Password    string `json:"-"`
 	Knowledge   int    `json:"knowledge" sql:"default:0"`
 	Performance int    `json:"performance" sql:"default:0"`
-	Sober       int    `json:"sober" sql:"default:0"`
+	Sober       int    `json:"soberness" sql:"default:0"`
 	Prestige    int    `json:"prestige" sql:"default:0"`
 	Connections int    `json:"connections" sql:"default:0"`
 	Flags       string `json:"-"`

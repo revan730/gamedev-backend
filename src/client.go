@@ -81,7 +81,7 @@ func (c *Client) SendSessionInfo() {
 
 func (c *Client) SendCurrentPage() {
 	jsonMap := map[string]interface{}{
-		"channel": "story",
+		"channel": "story_text",
 	}
 	page := c.hub.GetPage(c.userData.CurrentPage)
 	jsonMap["text"] = page.Text
@@ -147,15 +147,17 @@ func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
 		"channel":  "story",
 		"response": false,
 	}
-	switch jsonMap["method"] {
-	case "save":
+	switch jsonMap["channel"] {
+	case "story_save":
 		// Save user's progress
 		responseMap["response"] = c.hub.SaveUserSession(c.userData)
+		responseMap["channel"] = "story_save"
 		c.sendJSON(responseMap)
-	case "forward":
+	case "story_move":
 		err := c.NextPage(jsonMap)
 		if err != nil {
 			fmt.Println("Failed to go to next page: ", err)
+			responseMap["channel"] = "story_move"
 			c.sendJSON(responseMap)
 			return
 		}
@@ -180,7 +182,9 @@ func (c *Client) HandleClientMessage(jsonInt interface{}) {
 			return
 		}
 		c.Authorize(token)
-	case "story":
+	case "story_move":
+		c.HandleStoryMessages(jsonMap)
+	case "story_save":
 		c.HandleStoryMessages(jsonMap)
 	default:
 		c.sendJSON(map[string]string{"err": "wtf"})

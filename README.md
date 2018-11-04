@@ -30,7 +30,7 @@ Responses:
 
 | Status code | Body                                          | Case                                             |
 |-------------|-----------------------------------------------|--------------------------------------------------|
-| 200         |                                               | Player successfully registered                   |
+| 200         | {"err":null}                                  | Player successfully registered                   |
 | 400         | {"err": "Bad json"}                           | Wrong or malformed request body                  |
 | 400         | {"err": "Empty login or password"}            | No login or password provided                    |
 | 403         | {"err": "User already exists"}                | Player with provided login is already registered |
@@ -74,27 +74,27 @@ response is true if user is authorized, false otherwise
 
 **Proceed forward** - To go to next page of the story
 ```
-{"channel": "story", "method" : "forward", "answerId": <answerId, optional>}
+{"channel": "story_move", "answerId": <answerId, optional>}
 ```
 answerId must be provided if current page has a question
 
 Response:
 
 ```
-{"channel": "story", "response": <bool>}
+{"channel": "story_move", "response": <bool>}
 ```
 
 response is true if story went on next page, false otherwise
 
 **Save game** - when user wants to save game manually
 ```
-{"channel": "story", "method" : "save"}
+{"channel": "story_save"}
 ```
 
 Response:
 
 ```
-{"channel": "story", "response": <bool>}
+{"channel": "story_save", "response": <bool>}
 ```
 
 response is true if successfully saved, false otherwise
@@ -102,7 +102,7 @@ response is true if successfully saved, false otherwise
 **Story text** - ws server sends story text in message of format 
 
 ```
-{"channel": "story", "text": "<text>", "answers": [{"id": <answerId>, "text": "<answer text>"}...]}
+{"channel": "story_text", "text": "<text>", "answers": [{"id": <answerId>, "text": "<answer text>"}...]}
 ```
 
 answers array is optional and provided only if current text page has a question
