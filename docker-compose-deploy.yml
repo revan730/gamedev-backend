@@ -1,0 +1,30 @@
+version: '3'
+services:
+  nginx:
+    image: "eu.gcr.io/focus-mechanic-212210/gamedev-nginx:latest"
+    links:
+      - app
+    ports:
+      - "80:80"
+  app:
+    image: "eu.gcr.io/focus-mechanic-212210/gamedev-backend:latest"
+    ports:
+     - "8080"
+    restart: "always"
+    links:
+     - redis
+     - postgres
+  postgres:
+    image: "postgres"
+    restart: "always"
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_USER: "fict"
+      POSTGRES_PASSWORD: "fict" # Wow, much secure
+      POSTGRES_DB: "fict"
+      PGDATA: "/opt/db"
+    volumes:
+     - "/opt/db:/opt/db"
+  redis:
+    image: "redis:alpine"

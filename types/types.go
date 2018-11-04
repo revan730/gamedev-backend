@@ -6,7 +6,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-// TODO: Default values
 // TODO: deny nulls
 // TODO: Page string tags to simplify search and
 // identification
@@ -23,13 +22,13 @@ type Department struct {
 type Answer struct {
 	Id          int64  `json:"answerId"`
 	PageId      int64  `json:"-"`
-	Text        string `json:"text"`
-	Knowledge   int    `json:"-"`
-	Performance int    `json:"-"`
-	Sober       int    `json:"-"`
-	Prestige    int    `json:"-"`
-	Connections int    `json:"-"`
-	Flags       string `json:"-"`
+	Text        string `json:"text" sql:"default:''"`
+	Knowledge   int    `json:"-" sql:"default:0"`
+	Performance int    `json:"-" sql:"default:0"`
+	Sober       int    `json:"-" sql:"default:0"`
+	Prestige    int    `json:"-" sql:"default:0"`
+	Connections int    `json:"-" sql:"default:0"`
+	Flags       string `json:"-" sql:"default:''"`
 }
 
 type Page struct {
@@ -37,23 +36,23 @@ type Page struct {
 	NextPage    int64  `json:"-"`
 	IsQuestion  bool   `json:"-"`
 	IsJumper    bool   `json:"-"`
-	Year        int    `json:"year"`
-	Dep         int64  `json:"-"`
-	Spec        int64  `json:"-"`
+	Year        int    `json:"year" sql:"default:0"`
+	Dep         int64  `json:"-" sql:"default:0"`
+	Spec        int64  `json:"-" sql:"default:0"`
 	Text        string `json:"text"`
-	JumperLogic string `json:"-"`
+	JumperLogic string `json:"-" sql:"default:''"`
 }
 
 type User struct {
 	Id          int64  `json:"-"`
 	Login       string `sql:",unique" json:"-"`
-	CurrentPage int64  `json:"-"`
+	CurrentPage int64  `json:"-" sql:"default:1"`
 	Password    string `json:"-"`
-	Knowledge   int    `json:"knowledge"`
-	Performance int    `json:"performance"`
-	Sober       int    `json:"sober"`
-	Prestige    int    `json:"prestige"`
-	Connections int    `json:"connections"`
+	Knowledge   int    `json:"knowledge" sql:"default:0"`
+	Performance int    `json:"performance" sql:"default:0"`
+	Sober       int    `json:"sober" sql:"default:0"`
+	Prestige    int    `json:"prestige" sql:"default:0"`
+	Connections int    `json:"connections" sql:"default:0"`
 	Flags       string `json:"-"`
 }
 
@@ -85,6 +84,17 @@ func (u *User) MergeFlags(flags string) {
 func (u User) IsFlagSet(flag string) bool {
 	flagsArr := strings.Split(u.Flags, " ")
 	return contains(flagsArr, flag)
+}
+
+// Reset resets user's stats and current page to beggining
+func (u *User) Reset() {
+	u.Connections = 0
+	u.Sober = 0
+	u.Performance = 0
+	u.Prestige = 0
+	u.Knowledge = 0
+	u.CurrentPage = 1
+	u.Flags = ""
 }
 
 type CredentialsMessage struct {

@@ -1,0 +1,28 @@
+version: '3'
+services:
+  nginx:
+    build: ./docker-nginx
+    links:
+      - app
+    ports:
+      - "80:80"
+  app:
+    build: .
+    ports:
+     - "8080"
+    restart: "always"
+    links:
+     - redis
+     - postgres
+  postgres:
+    image: "postgres"
+    restart: "always"
+    environment:
+      POSTGRES_USER: "fict"
+      POSTGRES_PASSWORD: "fict" # Wow, much secure
+      POSTGRES_DB: "fict"
+      PGDATA: "/opt/db"
+    volumes:
+     - "/opt/db:/opt/db"
+  redis:
+    image: "redis:alpine"

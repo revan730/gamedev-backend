@@ -6,6 +6,7 @@ require (
 	github.com/go-pg/pg v6.15.0+incompatible
 	github.com/go-redis/redis v6.14.2+incompatible
 	github.com/gorilla/websocket v1.4.0
+	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/jinzhu/inflection v0.0.0-20180308033659-04140366298a // indirect
 	github.com/julienschmidt/httprouter v1.2.0
 	github.com/mattn/go-colorable v0.0.9 // indirect

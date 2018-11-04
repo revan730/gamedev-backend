@@ -126,6 +126,8 @@ func (s *Server) LoginHandler(w http.ResponseWriter, r *http.Request, p httprout
 		s.writeResponse(w, &map[string]string{"err": "Empty login or password"}, http.StatusBadRequest)
 		return
 	}
+	// TODO: Handle pg error, or it will throw 500
+	// if user not found
 	user, err := s.databaseClient.FindUser(loginMsg.Login)
 	if err != nil {
 		s.logError("Find user error", err)

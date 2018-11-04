@@ -129,8 +129,15 @@ func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 		interpreter.DoString(currentPage.JumperLogic)
 		return nil
 	} else {
-		// Linear transition
-		c.userData.CurrentPage = currentPage.NextPage
+		// If next page is null here, story has come to end
+		// Restart from first page and reset stats and flags(?)
+		if currentPage.NextPage == 0 {
+			c.userData.Reset()
+			c.SendSessionInfo()
+		} else {
+			// Linear transition
+			c.userData.CurrentPage = currentPage.NextPage
+		}
 		return nil
 	}
 }
