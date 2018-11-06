@@ -102,13 +102,13 @@ response is true if successfully saved, false otherwise
 **Story text** - ws server sends story text in message of format 
 
 ```
-{"channel": "story_text", "text": "<text>", "answers": [{"id": <answerId>, "text": "<answer text>"}...]}
+{"channel": "story_text", "text": "<text>", "answers": [{"answerId": <answerId>, "text": "<answer text>"}...]}
 ```
 
 answers array is optional and provided only if current text page has a question
 
 **User stats** - ws server sends user's stats each time they change and on authorization, in message of format
 ```
-{"channel": "stats", "stats": {"knowledge": int, "sober": int, "performance": int,
+{"channel": "stats", "stats": {"knowledge": int, "soberness": int, "performance": int,
  "prestige": int, "connections": int}}
 ```

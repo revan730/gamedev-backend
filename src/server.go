@@ -15,6 +15,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"go.uber.org/zap"
 	"github.com/go-pg/pg"
+	"github.com/rs/cors"
 
 	"github.com/go-redis/redis"
 	"github.com/revan730/gamedev-backend/db"
@@ -106,7 +107,8 @@ func (s *Server) Run() {
 	s.router.HandlerFunc("GET", "/api/v1/game", s.hub.ServeWs)
 	s.logger.Info("Starting server", zap.Int("port", s.config.Port))
 	go s.hub.Run()
-	err = http.ListenAndServe(fmt.Sprintf(":%d", s.config.Port), s.router)
+	corsRouter := cors.Default().Handler(s.router)
+	err = http.ListenAndServe(fmt.Sprintf(":%d", s.config.Port), corsRouter)
 	if err != nil {
 		s.logError("Server failed", err)
 		os.Exit(1)
