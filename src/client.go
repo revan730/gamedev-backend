@@ -1,7 +1,6 @@
 package src
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -43,7 +42,7 @@ type Client struct {
 	conn     *websocket.Conn
 	hub      *GameHub
 	userData *types.User
-	send     chan []byte
+	send     chan interface{}
 }
 
 func (c *Client) Authorize(authToken string) {
@@ -66,8 +65,8 @@ func (c *Client) Authorize(authToken string) {
 }
 
 func (c *Client) sendJSON(d interface{}) {
-	j, _ := json.Marshal(d)
-	c.send <- j
+	//j, _ := json.Marshal(d)
+	c.send <- d
 }
 
 // TODO: Very likely to be changed
@@ -231,22 +230,7 @@ func (c *Client) Writer() {
 				return
 			}
 
-			w, err := c.conn.NextWriter(websocket.TextMessage)
-			if err != nil {
-				return
-			}
-			w.Write(message)
-
-			// Add queued chat messages to the current websocket message.
-			n := len(c.send)
-			for i := 0; i < n; i++ {
-				w.Write(newline)
-				w.Write(<-c.send)
-			}
-
-			if err := w.Close(); err != nil {
-				return
-			}
+			c.conn.WriteJSON(message)
 		case <-ticker.C:
 			c.conn.SetWriteDeadline(time.Now().Add(writeWait))
 			if err := c.conn.WriteMessage(websocket.PingMessage, nil); err != nil {

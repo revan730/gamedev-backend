@@ -54,7 +54,7 @@ func (g *GameHub) ServeWs(w http.ResponseWriter, r *http.Request) {
 		g.logError("Unable to start WS server", err)
 		return
 	}
-	client := &Client{hub: g, conn: conn, send: make(chan []byte, 256)}
+	client := &Client{hub: g, conn: conn, send: make(chan interface{}, 256)}
 	client.hub.newConnection <- client
 
 	// Allow collection of memory referenced by the caller by doing all work in

@@ -4,6 +4,8 @@ services:
     build: ./docker-nginx
     links:
       - app
+    volumes:
+      - "/opt/gamedev/front:/var/www/frontend"
     ports:
       - "80:80"
   app:

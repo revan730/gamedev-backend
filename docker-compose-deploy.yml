@@ -4,6 +4,8 @@ services:
     image: "eu.gcr.io/focus-mechanic-212210/gamedev-nginx:latest"
     links:
       - app
+    volumes:
+      - "/opt/gamedev/front:/var/www/frontend"
     ports:
       - "80:80"
   app:
