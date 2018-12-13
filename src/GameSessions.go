@@ -41,7 +41,9 @@ func (g *GameHub) Run() {
 			fmt.Println("Client connected")
 		case client := <-g.closedConnection:
 			fmt.Println("Client disconnected")
-			g.SaveUserSession(client.userData)
+			if client.userData != nil {
+				g.SaveUserSession(client.userData)
+			}
 			delete(g.clients, client)
 		}
 	}
