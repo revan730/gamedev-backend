@@ -81,6 +81,10 @@ func (u *User) MergeFlags(flags string) {
 	u.Flags = strings.Join(userFlags, " ")
 }
 
+func (u *User) SetFlag(flag string) {
+	u.MergeFlags(flag)
+}
+
 func (u User) IsFlagSet(flag string) bool {
 	flagsArr := strings.Split(u.Flags, " ")
 	return contains(flagsArr, flag)

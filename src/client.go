@@ -131,14 +131,18 @@ func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 		// If next page is null here, story has come to end
 		// Restart from first page and reset stats and flags(?)
 		if currentPage.NextPage == 0 {
-			c.userData.Reset()
-			c.SendSessionInfo()
+			c.ResetStory()
 		} else {
 			// Linear transition
 			c.userData.CurrentPage = currentPage.NextPage
 		}
 		return nil
 	}
+}
+
+func (c *Client) ResetStory() {
+	c.userData.Reset()
+	c.SendSessionInfo()
 }
 
 func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
@@ -160,6 +164,9 @@ func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
 			c.sendJSON(responseMap)
 			return
 		}
+		c.SendCurrentPage()
+	case "story_reset":
+		c.ResetStory()
 		c.SendCurrentPage()
 	default:
 		// Unknown method
@@ -184,6 +191,8 @@ func (c *Client) HandleClientMessage(jsonInt interface{}) {
 	case "story_move":
 		c.HandleStoryMessages(jsonMap)
 	case "story_save":
+		c.HandleStoryMessages(jsonMap)
+	case "story_reset":
 		c.HandleStoryMessages(jsonMap)
 	default:
 		c.sendJSON(map[string]string{"err": "wtf"})

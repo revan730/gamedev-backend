@@ -76,6 +76,11 @@ func (i JumperInterpreter) DoString(luaStr string) bool {
 		L.Push(lua.LBool(checked))
 		return 1
 	}
+	setFlag := func(L *lua.LState) int {
+		flag := L.ToString(1)
+		i.userData.SetFlag(flag)
+		return 0
+	}
 	L := lua.NewState()
 	defer L.Close()
 	L.SetGlobal("knowledge", L.NewFunction(knowledge))
@@ -90,6 +95,7 @@ func (i JumperInterpreter) DoString(luaStr string) bool {
 	L.SetGlobal("addConnections", L.NewFunction(addConnections))
 	L.SetGlobal("jump", L.NewFunction(jump))
 	L.SetGlobal("flagCheck", L.NewFunction(flagCheck))
+	L.SetGlobal("setFlag", L.NewFunction(setFlag))
 	if err := L.DoString(luaStr); err != nil {
 		fmt.Println(err)
 		return false
