@@ -84,7 +84,12 @@ Response:
 {"channel": "story_move", "response": <bool>}
 ```
 
-response is true if story went on next page, false otherwise
+response is false if story couldn't go to next page
+
+**Reset** - Reset story
+```
+{"channel": "story_reset"}
+```
 
 **Save game** - when user wants to save game manually
 ```
