@@ -60,6 +60,10 @@ func (i JumperInterpreter) DoString(luaStr string) bool {
 		L.Push(lua.LNumber(i.userData.Connections))
 		return 1
 	}
+	praepostor := func(L *lua.LState) int {
+		L.Push(lua.LNumber(i.userData.Praepostor))
+		return 1
+	}
 	addConnections := func(L *lua.LState) int {
 		diff := L.ToInt(1)
 		i.userData.Connections += diff
@@ -88,6 +92,7 @@ func (i JumperInterpreter) DoString(luaStr string) bool {
 	L.SetGlobal("sober", L.NewFunction(sober))
 	L.SetGlobal("prestige", L.NewFunction(prestige))
 	L.SetGlobal("connections", L.NewFunction(connections))
+	L.SetGlobal("praepostor", L.NewFunction(praepostor))
 	L.SetGlobal("addKnowledge", L.NewFunction(addKnowledge))
 	L.SetGlobal("addPerformance", L.NewFunction(addPerformance))
 	L.SetGlobal("addSober", L.NewFunction(addSober))

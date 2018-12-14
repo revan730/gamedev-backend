@@ -98,6 +98,7 @@ func (c *Client) recalculateStats(answer *types.Answer) {
 	c.userData.Sober += answer.Sober
 	c.userData.Prestige += answer.Prestige
 	c.userData.Connections += answer.Connections
+	c.userData.Praepostor += answer.Praepostor
 }
 
 // NextPage proceeds game session to next page

@@ -28,6 +28,7 @@ type Answer struct {
 	Sober       int    `json:"-" sql:"default:0"`
 	Prestige    int    `json:"-" sql:"default:0"`
 	Connections int    `json:"-" sql:"default:0"`
+	Praepostor  int    `json:"-" sql:"default:0"`
 	Flags       string `json:"-" sql:"default:''"`
 }
 
@@ -53,6 +54,7 @@ type User struct {
 	Sober       int    `json:"soberness" sql:"default:0"`
 	Prestige    int    `json:"prestige" sql:"default:0"`
 	Connections int    `json:"connections" sql:"default:0"`
+	Praepostor  int    `json:"-" sql:"default:0"`
 	Flags       string `json:"-"`
 }
 
@@ -97,6 +99,7 @@ func (u *User) Reset() {
 	u.Performance = 0
 	u.Prestige = 0
 	u.Knowledge = 0
+	u.Praepostor = 0
 	u.CurrentPage = 1
 	u.Flags = ""
 }
