@@ -121,8 +121,6 @@ func (c *Client) NextPage(jsonMap map[string]interface{}) error {
 		// answer values
 		c.recalculateStats(answer)
 		c.userData.MergeFlags(answer.Flags)
-		// Send updated stats
-		c.SendSessionInfo()
 	}
 	if currentPage.IsJumper == true {
 		interpreter := lua.NewInterpreter(c.userData)
@@ -165,6 +163,7 @@ func (c *Client) HandleStoryMessages(jsonMap map[string]interface{}) {
 			c.sendJSON(responseMap)
 			return
 		}
+		c.SendSessionInfo()
 		c.SendCurrentPage()
 	case "story_reset":
 		c.ResetStory()
